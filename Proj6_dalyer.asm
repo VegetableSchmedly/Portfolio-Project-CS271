@@ -55,15 +55,12 @@ ENDM
 ;
 ; ---------------------------------------------------------------------------------
 mDisplayString		MACRO	stringReference
-	PUSH		EBP
-	MOV			EBP, ESP
 	PUSH		EDX
 
 	MOV			EDX, stringReference
 	CALL		WriteString
 
 	POP			EDX
-	POP			EBP
 ENDM
 
 ; (insert constant definitions here)
@@ -90,6 +87,8 @@ error				BYTE		"ERROR: You did not enter a signed number or your number was too 
 currentNum			SDWORD		?
 numArray			SDWORD		10 DUP(?)
 closingDisplay		BYTE		"You entered the following numbers:",13,10,0
+numString			BYTE		20 DUP (?)
+revString			BYTE		20 DUP (?)
 sum					SDWORD		?
 sumString			BYTE		"The sum of these numbers is: ",13,10,0
 truncatedAverage	SDWORD		?
@@ -111,31 +110,55 @@ main PROC
 	PUSH		OFFSET description2
 	CALL		Introduction
 
+	; Set up ReadVal loop
 	MOV			EDX, OFFSET numArray
 	MOV			ECX, 10
 	MOV			EBX, 4
-	_ReadValLoop:
-	PUSH		OFFSET isNeg
-	PUSH		OFFSET prompt
-	PUSH		OFFSET userNum
-	PUSH		countValue
-	PUSH		OFFSET bytesRead
-	PUSH		OFFSET error
-	PUSH		OFFSET currentNum
-	CALL		ReadVal
-	MOV			EDI, currentNum
-	MOV			[EDX], EDI
-	ADD			EDX, EBX
+	MOV			EAX, 0
+	_ReadValLoop:				; convert strings to integers until 10 valid are captured.
+		PUSH		OFFSET isNeg
+		PUSH		OFFSET prompt
+		PUSH		OFFSET userNum
+		PUSH		countValue
+		PUSH		OFFSET bytesRead
+		PUSH		OFFSET error
+		PUSH		OFFSET currentNum
+		CALL		ReadVal
+		MOV			EDI, currentNum
+		MOV			[EDX], EDI			; put currentNum into proper location in array
+		ADD			EDX, EBX			; increment SDWORD array by 4 (SDWORD)
+		ADD			EAX, currentNum		; ADD to sum
+	LOOP		_ReadValLoop	
+	MOV			sum, EAX			; capture sum
+	CALL		CrLf
+	CALL		CrLf
 
-	LOOP		_ReadValLoop					; Should have a return of the next element in the Array in currentNum. Needs to be placed correctly into the array.
 
-	PUSH		OFFSET closingDisplay
-	PUSH		OFFSET numArray
-	PUSH		OFFSET sumString
-	PUSH		OFFSET sum
-	PUSH		OFFSET avgString
-	PUSH		OFFSET truncatedAverage
-	CALL		WriteVal
+	; Print out array as strings
+	MOV			EDX, OFFSET closingDisplay
+	CALL		WriteString
+	MOV			ECX, 10
+	MOV			EBX, 0
+	MOV			EAX, 0
+	_PrintArrayLoop:
+		MOV			EAX, OFFSET numArray	
+		MOV			isNeg, 0				; assume positive
+
+		PUSH		OFFSET revString
+		PUSH		OFFSET isNeg
+		PUSH		OFFSET numString
+		PUSH		[EAX + EBX]
+		CALL		WriteVal
+		ADD			EBX, 4
+		PUSH		EAX
+		MOV			EAX, 0
+		MOV			AL, ','
+		CALL		WriteChar
+		MOV			AL, ' '
+		CALL		WriteChar
+		POP			EAX
+				
+	LOOP		_PrintArrayLoop
 
 
 	Invoke ExitProcess,0	; exit to operating system
@@ -248,39 +271,41 @@ ReadVal PROC
 	MOV			ESI, [EBP + 24]			; userNum input string location
 	MOV			EAX, 0
 	_conversionLoop:
-	LODSB
-	CMP			AL, '+'
-	JE			_endLoop				; skip positive sign
-	CMP			AL, '-'
-	JE			_minusSign				; handle negative number
-	CMP			AL, '+'
-	JE			_plusSign
-	CMP			AL, '0'
-	JB			_error
-	CMP			AL, '9'
-	JA			_error
+		LODSB
+		CMP			AL, '+'
+		JE			_endLoop				; skip positive sign
+		CMP			AL, '-'
+		JE			_minusSign				; handle negative number
+		CMP			AL, '+'
+		JE			_plusSign
+		CMP			AL, '0'
+		JB			_error
+		CMP			AL, '9'
+		JA			_error
 							
-										; Otherwise, number is good, convert and add to integer array.
+											; Otherwise, number is good, convert and add to integer array.
 
-	MOV			EBX, 10	
-	PUSH		EAX
-	MOV			EAX, EDI				; multiply accumulator by 10 for each digit
-	IMUL		EBX
-	MOV			EDI, EAX				; move product back to accumulator
-	MOV			EAX, 0
-	POP			EAX						; add next digit to accumulator
-	SUB			EAX, 48
-	ADD			EDI, EAX				; Use same sized register
+		MOV			EBX, 10	
+		PUSH		EAX
+		MOV			EAX, EDI				; multiply accumulator by 10 for each digit
+		IMUL		EBX
+		MOV			EDI, EAX				; move product back to accumulator
+		MOV			EAX, 0
+		POP			EAX						; add next digit to accumulator
+		SUB			EAX, 48
+		ADD			EDI, EAX				; Use same sized register
 
-	_endLoop:
+		_endLoop:
 	LOOP		_conversionLoop
 	JMP			_endOfProc
 
 
 	_error:
 	; The string values are not ASCII for a number or a +/- sign.
+	PUSH		EDX
 	MOV			EDX, [EBP+12]
 	CALL		WriteString
+	POP			EDX
 	CALL		CrLf
 	JMP			_start
 
@@ -313,6 +338,8 @@ ReadVal PROC
 	CMP			ECX, 0
 	JE			_notNeg
 	NEG			EDI
+	MOV			ECX, 0
+	MOV			[EBX], ECX
 	_notNeg:			; avoid NEG
 	MOV			EAX, [EBP+8]
 	MOV			[EAX], EDI
@@ -331,7 +358,7 @@ ReadVal ENDP
 
 
 ; ---------------------------------------------------------------------------------
-; Name: findSmallest
+; Name: WriteVal
 ;
 ; Finds the smallest integer in an array and returns it in the eax register.
 ;
@@ -340,9 +367,13 @@ ReadVal ENDP
 ; Postconditions: none.
 ;
 ; Receives:
-; [ebp+16] = type of array element
-; [ebp+12] = length of array
-; [ebp+8] = address of array
+; [ebp+32] = OFFSET isNeg
+; [ebp+28] = OFFSET prompt
+; [ebp+24] = OFFSET userNum					; STILL NEEDS CHANGING
+; [ebp+20] = countValue
+; [ebp+16] = OFFFSET bytesRead
+; [ebp+12] = OFFSET error
+; [ebp+8] = OFFSET currentNum
 ; arrayMsg, arrayError are global variables
 ;
 ; returns: eax = smallest integer
@@ -351,14 +382,94 @@ WriteVal PROC
 ; 
 	PUSH		EBP
 	MOV			EBP, ESP
+	PUSH		EAX
+	PUSH		EBX
+	PUSH		ECX
+	PUSH		EDX
+	PUSH		ESI
+	PUSH		EDI	
+	MOV			EBX, [EBP+16]			; offset isNeg
+	MOV			EDI, [EBP+20]			; Reverse numstring offset
+	MOV			ECX, 0				; count for string reversal
+	; CHeck if neg.
+	MOV			EAX, [EBP + 8]		; OFFSET of Num
+	CMP			EAX, 0
+	JB			_isNegative
+
 	;; convert back to string
+	CLD								; Move forwards through string
+	MOV			EAX, [EBP + 8]		; OFFSET of Num
+	PUSH		EBX
+	_divideLoop:
+	MOV			EDX, 0
+	MOV			EBX, 10	
+	DIV			EBX
+	ADD			EDX, 48				; add ascii conversion
+	PUSH		EAX
+	MOV			EAX, EDX			; move remainder to store it.
+	STOSB
+	POP			EAX
+	INC			ECX	
+	CMP			EAX, 0
+	JNE			_divideLoop			; repeat until there is no quotient.
+	POP			EBX
+	MOV			EAX, [EBX]
+	CMP			EAX, 0
+	JE			_notNeg
+	JMP			_reverse
 
 
 
+	_isNegative:
+	; set neg flag and go back
+	PUSH		EAX
+	PUSH		EBX
+	MOV			EAX, 1				; set negative flag
+	MOV			[EBX], EAX
+	MOV			EBX, [EDI]
+	NEG			EBX					; make integer positive for translation
+	MOV			[EDI], EBX
+	POP			EBX
+	POP			EAX
+	STOSB
+	INC			ECX
+	JMP			_divideLoop
 
+	
+
+	_reverse:
+	MOV			EAX, 0
+	MOV			AL, '-'
+	STOSB
+	_notNeg:
+	MOV			ESI, [EBP+20]
+	MOV			EDI, [EBP+12]
+	ADD			ESI, ECX
+	DEC			ESI
+
+	_revLoop:
+		STD
+		LODSB
+		CLD
+		STOSB
+	LOOP		_revLoop
+	
+	
+	MOV			AL, 0
+	STOSB				; null terminator
+
+
+	mDisplayString [EBP+12]
+
+	POP			EDI
+	POP			ESI
+	POP			EDX
+	POP			ECX
+	POP			EBX
+	POP			EAX
+	POP			EBP
+	RET			16
 WriteVal ENDP
-
-
 
 
 ; ---------------------------------------------------------------------------------
@@ -378,12 +489,12 @@ WriteVal ENDP
 ;
 ; returns: eax = smallest integer
 ; ---------------------------------------------------------------------------------
-Validate PROC
+CalcAvg PROC
 ; 
 	PUSH		EBP
 	MOV			EBP, ESP
 
-Validate ENDP
+CalcAvg ENDP
 
 
 END main
