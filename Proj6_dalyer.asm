@@ -12,7 +12,7 @@ TITLE Project 6     (Proj6_dalyer.asm)
 ;		Then, MAIN will use ReadVal and WriteVal to get 10 integers from a user, looping in MAIN, store these values in array format, then display
 ;		the integers and their sum and truncated average.
 
-;;		Must use Register Indirect addressing or string primitives for integer elemnts, 
+;;		Must use Register Indirect addressing or string primitives for integer elements, 
 ;;		and base+offset addresing for accessing parameters on the stack!!!
 
 INCLUDE Irvine32.inc
@@ -28,8 +28,6 @@ INCLUDE Irvine32.inc
 ; ---------------------------------------------------------------------------------
 mGetString			MACRO	promptReference, userInputReference, countValue, bytesReadReference
 ; Displays a prompt, and then gets the user's input and stores in in a specific memory location.
-	PUSH		EBP
-	MOV			EBP, ESP
 	PUSH		ECX
 	PUSH		EDX
 	PUSH		EAX
@@ -46,7 +44,6 @@ mGetString			MACRO	promptReference, userInputReference, countValue, bytesReadRef
 	POP			EAX
 	POP			EDX
 	POP			ECX
-	POP			EBP
 ENDM
 
 ; ---------------------------------------------------------------------------------
@@ -74,6 +71,7 @@ ENDM
 
 PLUS			EQU		<"+",0>
 MINUS			EQU		<"-",0>
+MAXCHAR			=		21
 
 .data
 
@@ -87,28 +85,57 @@ directions1			BYTE		"Please provide 10 signed decimal integers.",13,10,0
 description1		BYTE		"Each number needs to be small enough to fit inside a 32 bit register. ",13,10,0
 description2		BYTE		"After you have finished inputting the raw numbers I will display a list of the integers, their sum, and their average value.",13,10,0
 prompt				BYTE		"Please enter a signed number: ",0
-userNum				SDWORD		?
+userNum				byte		20 DUP(?)
 error				BYTE		"ERROR: You did not enter a signed number or your number was too big. Try again!",0
+currentNum			SDWORD		?
 numArray			SDWORD		10 DUP(?)
 closingDisplay		BYTE		"You entered the following numbers:",13,10,0
 sum					SDWORD		?
 sumString			BYTE		"The sum of these numbers is: ",13,10,0
 truncatedAverage	SDWORD		?
 avgString			BYTE		"The truncated average is ",13,10,0
-countValue			DWORD		32		; Should it be 12 to account for -2147483648 and null terminator?
-bytesRead			DWORD		?
+countValue			SDWORD		32		; Should it be 12 to account for -2147483648 and null terminator?
+bytesRead			DWORD		0
+isNeg				DWORD		0		; assumed positive -- BOOLEAN 0 if popsitive, 1 if negative
+
 
 .code
 main PROC
 
 ; (insert executable instructions here)
-PUSH		OFFSET program
-PUSH		OFFSET by
-PUSH		OFFSET myName
-PUSH		OFFSET directions1
-PUSH		OFFSET description1
-PUSH		OFFSET description2
-CALL		Introduction
+	PUSH		OFFSET program
+	PUSH		OFFSET by
+	PUSH		OFFSET myName
+	PUSH		OFFSET directions1
+	PUSH		OFFSET description1
+	PUSH		OFFSET description2
+	CALL		Introduction
+
+	MOV			EDX, OFFSET numArray
+	MOV			ECX, 10
+	MOV			EBX, 4
+	_ReadValLoop:
+	PUSH		OFFSET isNeg
+	PUSH		OFFSET prompt
+	PUSH		OFFSET userNum
+	PUSH		countValue
+	PUSH		OFFSET bytesRead
+	PUSH		OFFSET error
+	PUSH		OFFSET currentNum
+	CALL		ReadVal
+	MOV			EDI, currentNum
+	MOV			[EDX], EDI
+	ADD			EDX, EBX
+
+	LOOP		_ReadValLoop					; Should have a return of the next element in the Array in currentNum. Needs to be placed correctly into the array.
+
+	PUSH		OFFSET closingDisplay
+	PUSH		OFFSET numArray
+	PUSH		OFFSET sumString
+	PUSH		OFFSET sum
+	PUSH		OFFSET avgString
+	PUSH		OFFSET truncatedAverage
+	CALL		WriteVal
 
 
 	Invoke ExitProcess,0	; exit to operating system
@@ -183,9 +210,13 @@ Introduction ENDP
 ; Postconditions: none.
 ;
 ; Receives:
-; [ebp+16] = type of array element
-; [ebp+12] = length of array
-; [ebp+8] = address of array
+; [ebp+32] = OFFSET isNeg
+; [ebp+28] = OFFSET prompt
+; [ebp+24] = OFFSET userNum
+; [ebp+20] = countValue
+; [ebp+16] = OFFFSET bytesRead
+; [ebp+12] = OFFSET error
+; [ebp+8] = OFFSET currentNum
 ; arrayMsg, arrayError are global variables
 ;
 ; returns: eax = smallest integer
@@ -199,16 +230,101 @@ ReadVal PROC
 	PUSH		ECX
 	PUSH		EDX
 	PUSH		ESI
-	PUSH		EDI
+	PUSH		EDI	
+	MOV			EBX, [EBP+16]			; BYTES READ
+	MOV			EDI, 0					; accumulator
+	_start:
 
-;	CALL		mGetString
+	mGetString	[EBP + 28], [EBP + 24], MAXCHAR, EBX
+
+	MOV			EAX, [EBX]
+	CMP			EAX, [ebp+20]			; compared bytes read to max allowable length
+	JG			_error
+	CMP			EAX, 0
+	JE			_error
+
+	MOV			ECX, EAX				; BYTES READ
+	CLD									;Clear direction Flag - move forwards
+	MOV			ESI, [EBP + 24]			; userNum input string location
+	MOV			EAX, 0
+	_conversionLoop:
+	LODSB
+	CMP			AL, '+'
+	JE			_endLoop				; skip positive sign
+	CMP			AL, '-'
+	JE			_minusSign				; handle negative number
+	CMP			AL, '+'
+	JE			_plusSign
+	CMP			AL, '0'
+	JB			_error
+	CMP			AL, '9'
+	JA			_error
+							
+										; Otherwise, number is good, convert and add to integer array.
+
+	MOV			EBX, 10	
+	PUSH		EAX
+	MOV			EAX, EDI				; multiply accumulator by 10 for each digit
+	IMUL		EBX
+	MOV			EDI, EAX				; move product back to accumulator
+	MOV			EAX, 0
+	POP			EAX						; add next digit to accumulator
+	SUB			EAX, 48
+	ADD			EDI, EAX				; Use same sized register
+
+	_endLoop:
+	LOOP		_conversionLoop
+	JMP			_endOfProc
+
+
+	_error:
+	; The string values are not ASCII for a number or a +/- sign.
+	MOV			EDX, [EBP+12]
+	CALL		WriteString
+	CALL		CrLf
+	JMP			_start
 
 
 
+	_minusSign:
+	PUSH		EBX
+	PUSH		ECX
+	MOV			EBX, [EBP+32]
+	MOV			ECX, 1
+	MOV			[EBX], ECX
+	POP			ECX
+	POP			EBX
+	JMP			_endLoop
 
+	_plusSign:
+	PUSH		EBX
+	PUSH		ECX
+	MOV			EBX, [EBP+32]
+	MOV			ECX, 0
+	MOV			[EBX], ECX
+	POP			ECX
+	POP			EBX
+	JMP			_endLoop
 
+	_endOfProc:
+	; IF [EBP+32] IS 1, NEG THE NUMBER.
+	MOV			EBX, [EBP+32]
+	MOV			ECX, [EBX]
+	CMP			ECX, 0
+	JE			_notNeg
+	NEG			EDI
+	_notNeg:			; avoid NEG
+	MOV			EAX, [EBP+8]
+	MOV			[EAX], EDI
 
-
+	POP			EDI
+	POP			ESI
+	POP			EDX
+	POP			ECX
+	POP			EBX
+	POP			EAX
+	POP			EBP
+	RET			28
 
 ReadVal ENDP
 
@@ -235,13 +351,13 @@ WriteVal PROC
 ; 
 	PUSH		EBP
 	MOV			EBP, ESP
-
+	;; convert back to string
 
 
 
 
 WriteVal ENDP
-END main
+
 
 
 
@@ -262,6 +378,12 @@ END main
 ;
 ; returns: eax = smallest integer
 ; ---------------------------------------------------------------------------------
+Validate PROC
+; 
+	PUSH		EBP
+	MOV			EBP, ESP
+
+Validate ENDP
 
 
-
+END main
