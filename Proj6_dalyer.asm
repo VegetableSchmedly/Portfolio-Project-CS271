@@ -392,9 +392,9 @@ WriteVal PROC
 	MOV			EDI, [EBP+20]			; Reverse numstring offset
 	MOV			ECX, 0				; count for string reversal
 	; CHeck if neg.
-	MOV			EAX, [EBP + 8]		; OFFSET of Num
+	MOV			EAX, [EBP + 8]		; Num value
 	CMP			EAX, 0
-	JB			_isNegative
+	JL			_isNegative
 
 	;; convert back to string
 	CLD								; Move forwards through string
@@ -422,16 +422,11 @@ WriteVal PROC
 
 	_isNegative:
 	; set neg flag and go back
-	PUSH		EAX
 	PUSH		EBX
 	MOV			EAX, 1				; set negative flag
 	MOV			[EBX], EAX
-	MOV			EBX, [EDI]
-	NEG			EBX					; make integer positive for translation
-	MOV			[EDI], EBX
-	POP			EBX
-	POP			EAX
-	STOSB
+	MOV			EAX, [EBP+8]
+	NEG			EAX
 	INC			ECX
 	JMP			_divideLoop
 

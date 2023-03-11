@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/10/23 16:11:33
+Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/10/23 19:00:25
  Project 6     (Proj6_dalyer.asm			     Page 1 - 1
 
 
@@ -537,9 +537,9 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/10/23 16:11:33
  000001F8  8B 7D 14			MOV			EDI, [EBP+20]			; Reverse numstring offset
  000001FB  B9 00000000			MOV			ECX, 0				; count for string reversal
 					; CHeck if neg.
- 00000200  8B 45 08			MOV			EAX, [EBP + 8]		; OFFSET of Num
+ 00000200  8B 45 08			MOV			EAX, [EBP + 8]		; Num value
  00000203  83 F8 00			CMP			EAX, 0
- 00000206  72 29			JB			_isNegative
+ 00000206  7C 29			JL			_isNegative
 
 					;; convert back to string
  00000208  FC				CLD								; Move forwards through string
@@ -560,65 +560,60 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/10/23 16:11:33
  00000227  5B				POP			EBX
  00000228  8B 03			MOV			EAX, [EBX]
  0000022A  83 F8 00			CMP			EAX, 0
- 0000022D  74 1F			JE			_notNeg
- 0000022F  EB 15			JMP			_reverse
+ 0000022D  74 1A			JE			_notNeg
+ 0000022F  EB 10			JMP			_reverse
 
 
 
  00000231				_isNegative:
 					; set neg flag and go back
- 00000231  50				PUSH		EAX
- 00000232  53				PUSH		EBX
- 00000233  B8 00000001			MOV			EAX, 1				; set negative flag
- 00000238  89 03			MOV			[EBX], EAX
- 0000023A  8B 1F			MOV			EBX, [EDI]
- 0000023C  F7 DB			NEG			EBX					; make integer positive for translation
- 0000023E  89 1F			MOV			[EDI], EBX
- 00000240  5B				POP			EBX
- 00000241  58				POP			EAX
- 00000242  AA				STOSB
- 00000243  41				INC			ECX
- 00000244  EB C7			JMP			_divideLoop
+ 00000231  53				PUSH		EBX
+ 00000232  B8 00000001			MOV			EAX, 1				; set negative flag
+ 00000237  89 03			MOV			[EBX], EAX
+ 00000239  8B 45 08			MOV			EAX, [EBP+8]
+ 0000023C  F7 D8			NEG			EAX
+ 0000023E  41				INC			ECX
+ 0000023F  EB CC			JMP			_divideLoop
 
 					
 
- 00000246				_reverse:
- 00000246  B8 00000000			MOV			EAX, 0
- 0000024B  B0 2D			MOV			AL, '-'
- 0000024D  AA				STOSB
- 0000024E				_notNeg:
- 0000024E  8B 75 14			MOV			ESI, [EBP+20]
- 00000251  8B 7D 0C			MOV			EDI, [EBP+12]
- 00000254  03 F1			ADD			ESI, ECX
- 00000256  4E				DEC			ESI
+ 00000241				_reverse:
+ 00000241  B8 00000000			MOV			EAX, 0
+ 00000246  B0 2D			MOV			AL, '-'
+ 00000248  AA				STOSB
+ 00000249				_notNeg:
+ 00000249  8B 75 14			MOV			ESI, [EBP+20]
+ 0000024C  8B 7D 0C			MOV			EDI, [EBP+12]
+ 0000024F  03 F1			ADD			ESI, ECX
+ 00000251  4E				DEC			ESI
 
- 00000257				_revLoop:
- 00000257  FD					STD
- 00000258  AC					LODSB
- 00000259  FC					CLD
- 0000025A  AA					STOSB
- 0000025B  E2 FA			LOOP		_revLoop
+ 00000252				_revLoop:
+ 00000252  FD					STD
+ 00000253  AC					LODSB
+ 00000254  FC					CLD
+ 00000255  AA					STOSB
+ 00000256  E2 FA			LOOP		_revLoop
 					
 					
- 0000025D  B0 00			MOV			AL, 0
- 0000025F  AA				STOSB				; null terminator
+ 00000258  B0 00			MOV			AL, 0
+ 0000025A  AA				STOSB				; null terminator
 
 
 					mDisplayString [EBP+12]
- 00000260  52		     1		PUSH		EDX
- 00000261  8B 55 0C	     1		MOV			EDX, [EBP+12]
- 00000264  E8 00000000 E     1		CALL		WriteString
- 00000269  5A		     1		POP			EDX
+ 0000025B  52		     1		PUSH		EDX
+ 0000025C  8B 55 0C	     1		MOV			EDX, [EBP+12]
+ 0000025F  E8 00000000 E     1		CALL		WriteString
+ 00000264  5A		     1		POP			EDX
 
- 0000026A  5F				POP			EDI
- 0000026B  5E				POP			ESI
- 0000026C  5A				POP			EDX
- 0000026D  59				POP			ECX
- 0000026E  5B				POP			EBX
- 0000026F  58				POP			EAX
- 00000270  5D				POP			EBP
- 00000271  C2 0010			RET			16
- 00000274			WriteVal ENDP
+ 00000265  5F				POP			EDI
+ 00000266  5E				POP			ESI
+ 00000267  5A				POP			EDX
+ 00000268  59				POP			ECX
+ 00000269  5B				POP			EBX
+ 0000026A  58				POP			EAX
+ 0000026B  5D				POP			EBP
+ 0000026C  C2 0010			RET			16
+ 0000026F			WriteVal ENDP
 
 
 				; ---------------------------------------------------------------------------------
@@ -638,16 +633,16 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/10/23 16:11:33
 				;
 				; returns: eax = smallest integer
 				; ---------------------------------------------------------------------------------
- 00000274			CalcAvg PROC
+ 0000026F			CalcAvg PROC
 				; 
- 00000274  55				PUSH		EBP
- 00000275  8B EC			MOV			EBP, ESP
+ 0000026F  55				PUSH		EBP
+ 00000270  8B EC			MOV			EBP, ESP
 
- 00000277			CalcAvg ENDP
+ 00000272			CalcAvg ENDP
 
 
 				END main
-Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/10/23 16:11:33
+Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/10/23 19:00:25
  Project 6     (Proj6_dalyer.asm			     Symbols 2 - 1
 
 
@@ -750,14 +745,14 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 00000297 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 00000277 Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000272 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-CalcAvg  . . . . . . . . . . . .	P Near	 00000274 _TEXT	Length= 00000003 Public STDCALL
+CalcAvg  . . . . . . . . . . . .	P Near	 0000026F _TEXT	Length= 00000003 Public STDCALL
 CloseFile  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 CloseHandle  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Clrscr . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -867,12 +862,12 @@ WriteStackFrameName  . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-WriteVal . . . . . . . . . . . .	P Near	 000001EC _TEXT	Length= 00000088 Public STDCALL
+WriteVal . . . . . . . . . . . .	P Near	 000001EC _TEXT	Length= 00000083 Public STDCALL
   _divideLoop  . . . . . . . . .	L Near	 0000020D _TEXT	
   _isNegative  . . . . . . . . .	L Near	 00000231 _TEXT	
-  _reverse . . . . . . . . . . .	L Near	 00000246 _TEXT	
-  _notNeg  . . . . . . . . . . .	L Near	 0000024E _TEXT	
-  _revLoop . . . . . . . . . . .	L Near	 00000257 _TEXT	
+  _reverse . . . . . . . . . . .	L Near	 00000241 _TEXT	
+  _notNeg  . . . . . . . . . . .	L Near	 00000249 _TEXT	
+  _revLoop . . . . . . . . . . .	L Near	 00000252 _TEXT	
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000E1 Public STDCALL
   _ReadValLoop . . . . . . . . .	L Near	 00000037 _TEXT	
