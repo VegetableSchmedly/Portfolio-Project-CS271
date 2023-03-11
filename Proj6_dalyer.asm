@@ -66,8 +66,6 @@ ENDM
 ; (insert constant definitions here)
 
 
-PLUS			EQU		<"+",0>
-MINUS			EQU		<"-",0>
 MAXCHAR			=		21
 
 .data
@@ -90,16 +88,16 @@ closingDisplay		BYTE		"You entered the following numbers:",13,10,0
 numString			BYTE		20 DUP (?)
 revString			BYTE		20 DUP (?)
 sum					SDWORD		?
-sumString			BYTE		"The sum of these numbers is: ",13,10,0
+sumString			BYTE		"The sum of these numbers is: ",0
 truncatedAverage	SDWORD		?
-avgString			BYTE		"The truncated average is ",13,10,0
+avgString			BYTE		"The truncated average is: ",0
 countValue			SDWORD		32		; Should it be 12 to account for -2147483648 and null terminator?
 bytesRead			DWORD		0
 isNeg				DWORD		0		; assumed positive -- BOOLEAN 0 if popsitive, 1 if negative
 
 
 .code
-main PROC
+main PROC 
 
 ; (insert executable instructions here)
 	PUSH		OFFSET program
@@ -157,8 +155,32 @@ main PROC
 		MOV			AL, ' '
 		CALL		WriteChar
 		POP			EAX
-				
 	LOOP		_PrintArrayLoop
+	CALL		CrLf
+	CALL		CrLf
+
+	;SUM
+	MOV			EDX, OFFSET sumString
+	CALL		WriteString
+
+	PUSH		OFFSET revString
+	PUSH		OFFSET isNeg
+	PUSH		OFFSET numString
+	PUSH		sum
+	CALL		WriteVal
+	CALL		CrLf
+	CALL		CrLf
+	; AVG
+	PUSH		OFFSET truncatedAverage
+	PUSH		OFFSET avgString
+	PUSH		sum
+	CALL		CalcAvg
+
+	PUSH		OFFSET revString
+	PUSH		OFFSET isNeg
+	PUSH		OFFSET numString
+	PUSH		truncatedAverage
+	CALL		WriteVal
 
 
 	Invoke ExitProcess,0	; exit to operating system
@@ -168,22 +190,24 @@ main ENDP
 
 
 ; ---------------------------------------------------------------------------------
-; Name: findSmallest
+; Name: Introduction
 ;
-; Invokes mGetString to get user input and converts it to its numeric value SDWORD. 
-;	Then validates it is a number and stores it in an array.
+; Uses WriteString to print out the title, introduction, and description of the program
 ;
-; Preconditions: the array contains only positive values.
+; Preconditions: The offsets of program, by, myname, directions1, and description1-2 are passed as parameters
 ;
-; Postconditions: none.
+; Postconditions: Uses EBP, ESP, EDX. All are restored to their previous values.
 ;
 ; Receives:
-; [ebp+16] = type of array element
-; [ebp+12] = length of array
-; [ebp+8] = address of array
+; [ebp+28] = OFFSET program
+; [ebp+24] = OFFSET by
+; [ebp+20] = OFFSET myName
+; [ebp+16] = OFFSET directions1
+; [ebp+12] = OFFSET description1
+; [ebp+8] = OFFSET description2
 ; arrayMsg, arrayError are global variables
 ;
-; returns: eax = smallest integer
+; returns: Prints strings to the console for the user to view.
 ; ---------------------------------------------------------------------------------
 
 Introduction PROC
@@ -223,7 +247,7 @@ Introduction ENDP
 
 
 ; ---------------------------------------------------------------------------------
-; Name: findSmallest
+; Name: ReadVal
 ;
 ; Invokes mGetString to get user input and converts it to its numeric value SDWORD. 
 ;	Then validates it is a number and stores it in an array.
@@ -240,23 +264,22 @@ Introduction ENDP
 ; [ebp+16] = OFFFSET bytesRead
 ; [ebp+12] = OFFSET error
 ; [ebp+8] = OFFSET currentNum
-; arrayMsg, arrayError are global variables
+; MAXCHAR is a defined constant - passed to mGetString
 ;
 ; returns: eax = smallest integer
 ; ---------------------------------------------------------------------------------
-ReadVal PROC
+ReadVal PROC 
 ;  Invokes mGetString to get user input and converts it to its numeric value SDWORD. Then validates it is a number and stores it in an array.
 	PUSH		EBP
 	MOV			EBP, ESP
-	PUSH		EAX
-	PUSH		EBX
-	PUSH		ECX
-	PUSH		EDX
-	PUSH		ESI
-	PUSH		EDI	
+	PUSHAD
+
+	_start:
 	MOV			EBX, [EBP+16]			; BYTES READ
 	MOV			EDI, 0					; accumulator
-	_start:
+	MOV			EAX, [EBP+32]			; Make sure number is assumed positive
+	MOV			[EAX], EDI				; EDI at 0, so using it to clear Neg
+
 
 	mGetString	[EBP + 28], [EBP + 24], MAXCHAR, EBX
 
@@ -265,6 +288,9 @@ ReadVal PROC
 	JG			_error
 	CMP			EAX, 0
 	JE			_error
+	MOV			EBX, [EBP+24]
+	MOV			ECX, [EBX]
+	JO			_error
 
 	MOV			ECX, EAX				; BYTES READ
 	CLD									;Clear direction Flag - move forwards
@@ -294,7 +320,7 @@ ReadVal PROC
 		POP			EAX						; add next digit to accumulator
 		SUB			EAX, 48
 		ADD			EDI, EAX				; Use same sized register
-
+		JO			_minValCheck
 		_endLoop:
 	LOOP		_conversionLoop
 	JMP			_endOfProc
@@ -309,6 +335,17 @@ ReadVal PROC
 	CALL		CrLf
 	JMP			_start
 
+	_minValCheck:
+	; Check if the value is -2147483648
+	CMP			EDI, 2147483648
+	JA			_error
+	MOV			EBX, [EBP+32]
+	MOV			ECX, [EBX]
+	CMP			ECX, 0	
+	JE			_error
+	JMP			_endOfProc
+
+
 
 
 	_minusSign:
@@ -322,6 +359,7 @@ ReadVal PROC
 	JMP			_endLoop
 
 	_plusSign:
+	; skip the plus sign, as it is not relevant
 	PUSH		EBX
 	PUSH		ECX
 	MOV			EBX, [EBP+32]
@@ -340,16 +378,11 @@ ReadVal PROC
 	NEG			EDI
 	MOV			ECX, 0
 	MOV			[EBX], ECX
-	_notNeg:			; avoid NEG
+	_notNeg:				; avoid NEG
 	MOV			EAX, [EBP+8]
-	MOV			[EAX], EDI
+	MOV			[EAX], EDI	; Save number in OFFSET passed in where value is desired
 
-	POP			EDI
-	POP			ESI
-	POP			EDX
-	POP			ECX
-	POP			EBX
-	POP			EAX
+	POPAD
 	POP			EBP
 	RET			28
 
@@ -367,13 +400,10 @@ ReadVal ENDP
 ; Postconditions: none.
 ;
 ; Receives:
-; [ebp+32] = OFFSET isNeg
-; [ebp+28] = OFFSET prompt
-; [ebp+24] = OFFSET userNum					; STILL NEEDS CHANGING
-; [ebp+20] = countValue
-; [ebp+16] = OFFFSET bytesRead
-; [ebp+12] = OFFSET error
-; [ebp+8] = OFFSET currentNum
+; [ebp+20] = OFFSET revNumString
+; [ebp+16] = OFFFSET isNeg
+; [ebp+12] = OFFSET numString
+; [ebp+8] = value to be converted
 ; arrayMsg, arrayError are global variables
 ;
 ; returns: eax = smallest integer
@@ -382,12 +412,8 @@ WriteVal PROC
 ; 
 	PUSH		EBP
 	MOV			EBP, ESP
-	PUSH		EAX
-	PUSH		EBX
-	PUSH		ECX
-	PUSH		EDX
-	PUSH		ESI
-	PUSH		EDI	
+	PUSHAD
+
 	MOV			EBX, [EBP+16]			; offset isNeg
 	MOV			EDI, [EBP+20]			; Reverse numstring offset
 	MOV			ECX, 0				; count for string reversal
@@ -456,12 +482,7 @@ WriteVal PROC
 
 	mDisplayString [EBP+12]
 
-	POP			EDI
-	POP			ESI
-	POP			EDX
-	POP			ECX
-	POP			EBX
-	POP			EAX
+	POPAD
 	POP			EBP
 	RET			16
 WriteVal ENDP
@@ -477,9 +498,9 @@ WriteVal ENDP
 ; Postconditions: none.
 ;
 ; Receives:
-; [ebp+16] = type of array element
-; [ebp+12] = length of array
-; [ebp+8] = address of array
+; [ebp+16] = OFFSET truncatedAverage
+; [ebp+12] = OFFSET of median prompt
+; [ebp+8] = sum value
 ; arrayMsg, arrayError are global variables
 ;
 ; returns: eax = smallest integer
@@ -488,6 +509,24 @@ CalcAvg PROC
 ; 
 	PUSH		EBP
 	MOV			EBP, ESP
+	PUSHAD	
+
+	MOV			EDX, [EBP+12]
+	CALL		WriteString
+
+	MOV			EDI, [EBP+16]
+	MOV			EAX, [EBP+8]
+	MOV			EBX, 10
+	MOV			EDX, 0
+	CDQ
+	IDIV		EBX
+	MOV			[EDI], EAX
+
+
+
+	POPAD
+	POP			EBP
+	RET			16
 
 CalcAvg ENDP
 
