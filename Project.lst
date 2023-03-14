@@ -1,11 +1,11 @@
-Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
+Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/14/23 19:42:02
  Project 6     (Proj6_dalyer.asm			     Page 1 - 1
 
 
 				TITLE Project 6     (Proj6_dalyer.asm)
 
 				; Author: Eric Daly
-				; Last Modified: 3/7/2023
+				; Last Modified: 3/12/2023
 				; OSU email address: dalyer@oregonstate.edu
 				; Course number/section:   CS271 Section 400
 				; Project Number:  6              Due Date: 3/19/2023
@@ -269,7 +269,7 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
 	   67 20 74 6F 74
 	   61 6C 2E 0D 0A
 	   00
- 00000384  00000032 [		userNum				byte		50 DUP(?)
+ 00000384  00000032 [		userNum				byte		50 DUP(?)		
 	    00
 	   ]
 
@@ -292,29 +292,30 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
  00000032  BB 00000004			MOV				EBX, 4
  00000037  B8 00000000			MOV				EAX, 0
  0000003C				_ReadValLoop:				; convert strings to integers until 10 valid are captured.
-						; Line numbers
- 0000003C  68 0000023D R			PUSH			OFFSET revString
- 00000041  68 000002B8 R			PUSH			OFFSET isNeg
- 00000046  68 0000020B R			PUSH			OFFSET numString
- 0000004B  FF 35 00000300 R			PUSH			count
- 00000051  E8 000002D2				CALL			WriteVal
- 00000056  FF 05 00000300 R			INC				count
-						mDisplayString	OFFSET space
- 0000005C  52		     1		PUSH		EDX
- 0000005D  BA 000002FE R     1		MOV			EDX, OFFSET space
- 00000062  E8 00000000 E     1		CALL		WriteString
- 00000067  5A		     1		POP			EDX
+						; current total
 						mDisplayString	OFFSET currentTotal
- 00000068  52		     1		PUSH		EDX
- 00000069  BA 00000304 R     1		MOV			EDX, OFFSET currentTotal
- 0000006E  E8 00000000 E     1		CALL		WriteString
- 00000073  5A		     1		POP			EDX
- 00000074  68 0000023D R			PUSH			OFFSET revString
- 00000079  68 000002B8 R			PUSH			OFFSET isNeg
- 0000007E  68 0000020B R			PUSH			OFFSET numString
- 00000083  FF 35 0000026F R			PUSH			sum
- 00000089  E8 0000029A				CALL			WriteVal
- 0000008E  E8 00000000 E			CALL			CrlF
+ 0000003C  52		     1		PUSH		EDX
+ 0000003D  BA 00000304 R     1		MOV			EDX, OFFSET currentTotal
+ 00000042  E8 00000000 E     1		CALL		WriteString
+ 00000047  5A		     1		POP			EDX
+ 00000048  68 0000023D R			PUSH			OFFSET revString
+ 0000004D  68 000002B8 R			PUSH			OFFSET isNeg
+ 00000052  68 0000020B R			PUSH			OFFSET numString
+ 00000057  FF 35 0000026F R			PUSH			sum
+ 0000005D  E8 000002FF				CALL			WriteVal
+ 00000062  E8 00000000 E			CALL			CrlF
+						; Line numbers
+ 00000067  68 0000023D R			PUSH			OFFSET revString
+ 0000006C  68 000002B8 R			PUSH			OFFSET isNeg
+ 00000071  68 0000020B R			PUSH			OFFSET numString
+ 00000076  FF 35 00000300 R			PUSH			count
+ 0000007C  E8 000002E0				CALL			WriteVal
+ 00000081  FF 05 00000300 R			INC				count
+						mDisplayString	OFFSET space
+ 00000087  52		     1		PUSH		EDX
+ 00000088  BA 000002FE R     1		MOV			EDX, OFFSET space
+ 0000008D  E8 00000000 E     1		CALL		WriteString
+ 00000092  5A		     1		POP			EDX
 						;current total
  00000093  68 000002B8 R			PUSH			OFFSET isNeg
  00000098  68 0000014B R			PUSH			OFFSET prompt
@@ -331,7 +332,7 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
  000000CC  A3 0000026F R			MOV				sum, EAX
  000000D1  83 F9 00				CMP				ECX, 0
  000000D4  49					DEC				ECX
- 000000D5  0F 87 FFFFFF61		JA				_ReadValLoop		; 18 bytes too large for LOOP 
+ 000000D5  0F 87 FFFFFF61		JA				_ReadValLoop			; 18 bytes too large for LOOP 
  000000DB  E8 00000000 E		CALL			CrLf
  000000E0  E8 00000000 E		CALL			CrLf
 
@@ -353,10 +354,10 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
  0000010F  68 0000023D R			PUSH			OFFSET revString
  00000114  68 000002B8 R			PUSH			OFFSET isNeg
  00000119  68 0000020B R			PUSH			OFFSET numString
- 0000011E  FF 34 18				PUSH			[EAX + EBX]
- 00000121  E8 00000202				CALL			WriteVal
+ 0000011E  FF 34 18				PUSH			[EAX + EBX]			; Value in num array, incremented forward by EBX
+ 00000121  E8 0000023B				CALL			WriteVal
  00000126  83 C3 04				ADD				EBX, 4
- 00000129  83 F9 01				CMP				ECX, 1
+ 00000129  83 F9 01				CMP				ECX, 1				; Last value doesnt need a comma
  0000012C  77 0E				JA				_addComma
  0000012E					_endOfPrintLoop:
  0000012E  E2 D0			LOOP			_PrintArrayLoop
@@ -381,7 +382,8 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
  00000154  EB D8			JMP				_endOfPrintLoop
 
  00000156				_sum:
-					mDisplayString	OFFSET sumString
+					; Set up for WriteVal to display sum, which was calculated during the user input loop.
+					mDisplayString	OFFSET sumString		; sum display string
  00000156  52		     1		PUSH		EDX
  00000157  BA 00000273 R     1		MOV			EDX, OFFSET sumString
  0000015C  E8 00000000 E     1		CALL		WriteString
@@ -391,33 +393,34 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
  00000167  68 000002B8 R		PUSH			OFFSET isNeg
  0000016C  68 0000020B R		PUSH			OFFSET numString
  00000171  FF 35 0000026F R		PUSH			sum
- 00000177  E8 000001AC			CALL			WriteVal
+ 00000177  E8 000001E5			CALL			WriteVal
  0000017C  E8 00000000 E		CALL			CrLf
  00000181  E8 00000000 E		CALL			CrLf
 
-				; AVG CALC
-					mDisplayString	OFFSET avgString
- 00000186  52		     1		PUSH		EDX
- 00000187  BA 00000295 R     1		MOV			EDX, OFFSET avgString
- 0000018C  E8 00000000 E     1		CALL		WriteString
- 00000191  5A		     1		POP			EDX
- 00000192  A1 0000026F R		MOV				EAX, sum
- 00000197  BA 00000000			MOV				EDX, 0
- 0000019C  BB 0000000A			MOV				EBX, 10
- 000001A1  99				CDQ
- 000001A2  F7 FB			IDIV			EBX
- 000001A4  A3 00000291 R		MOV				truncatedAverage, EAX
+					; AVG CALCULATION
+ 00000186  A1 0000026F R		MOV				EAX, sum			
+ 0000018B  BA 00000000			MOV				EDX, 0
+ 00000190  BB 0000000A			MOV				EBX, 10
+ 00000195  99				CDQ										; sign extend to EDX:EAX for IDIV
+ 00000196  F7 FB			IDIV			EBX						; IDIV sum / 10
+ 00000198  A3 00000291 R		MOV				truncatedAverage, EAX
 
-					;
+					mDisplayString	OFFSET avgString		; Average display string
+ 0000019D  52		     1		PUSH		EDX
+ 0000019E  BA 00000295 R     1		MOV			EDX, OFFSET avgString
+ 000001A3  E8 00000000 E     1		CALL		WriteString
+ 000001A8  5A		     1		POP			EDX
+
+					; set up WriteVal for printing the truncated average
  000001A9  68 0000023D R		PUSH			OFFSET revString
  000001AE  68 000002B8 R		PUSH			OFFSET isNeg
  000001B3  68 0000020B R		PUSH			OFFSET numString
  000001B8  FF 35 00000291 R		PUSH			truncatedAverage
- 000001BE  E8 00000165			CALL			WriteVal
+ 000001BE  E8 0000019E			CALL			WriteVal
  000001C3  E8 00000000 E		CALL			CrLf
  000001C8  E8 00000000 E		CALL			CrLf
 
-					mDisplayString	OFFSET goodbye
+					mDisplayString	OFFSET goodbye			; Thanks for the (hopefully good) grade!
  000001CD  52		     1		PUSH		EDX
  000001CE  BA 000002BC R     1		MOV			EDX, OFFSET goodbye
  000001D3  E8 00000000 E     1		CALL		WriteString
@@ -541,7 +544,7 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
  0000024E  8B 45 20			MOV			EAX, [EBP+32]			; Make sure number is assumed positive
  00000251  89 10			MOV			[EAX], EDX				; EDI at 0, so using it to clear Neg
 
-
+					
 					mGetString	[EBP + 28], [EBP + 24], MAXCHAR, EBX
  00000253  51		     1		PUSH		ECX
  00000254  52		     1		PUSH		EDX
@@ -558,9 +561,9 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
 
  00000270  8B 03			MOV			EAX, [EBX]
  00000272  3B 45 14			CMP			EAX, [ebp+20]			; compared bytes read to max allowable length
- 00000275  7F 4B			JG			_error
+ 00000275  7F 47			JG			_error
  00000277  83 F8 00			CMP			EAX, 0					; Nothing entered
- 0000027A  74 46			JE			_error
+ 0000027A  74 42			JE			_error
  0000027C  8B 5D 18			MOV			EBX, [EBP+24]
  0000027F  8B 0B			MOV			ECX, [EBX]
 
@@ -570,96 +573,140 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
  00000287  B8 00000000			MOV			EAX, 0
  0000028C				_conversionLoop:
  0000028C  AC					LODSB								; Load byte by byte into AL
- 0000028D  3C 2B				CMP			AL, '+'
- 0000028F  74 2D				JE			_endLoop				; skip positive sign
- 00000291  3C 2D				CMP			AL, '-'
- 00000293  74 55				JE			_minusSign				; handle negative number
- 00000295  3C 2B				CMP			AL, '+'
- 00000297  74 61				JE			_plusSign
- 00000299  3C 30				CMP			AL, '0'
- 0000029B  72 25				JB			_error
- 0000029D  3C 39				CMP			AL, '9'
- 0000029F  77 21				JA			_error
+ 0000028D  3C 2D				CMP			AL, '-'
+ 0000028F  74 55				JE			_minusSign				; handle negative number
+ 00000291  3C 2B				CMP			AL, '+'
+ 00000293  74 6D				JE			_plusSign
+ 00000295  3C 30				CMP			AL, '0'
+ 00000297  72 25				JB			_error
+ 00000299  3C 39				CMP			AL, '9'
+ 0000029B  77 21				JA			_error
 											
 															; Otherwise, number is good, convert and add to integer array
- 000002A1  BB 0000000A				MOV			EBX, 10	
- 000002A6  50					PUSH		EAX
- 000002A7  8B C2				MOV			EAX, EDX				; multiply accumulator by 10 for each digit
- 000002A9  F7 EB				IMUL		EBX
- 000002AB  8B D0				MOV			EDX, EAX				; move product back to accumulator
- 000002AD  B8 00000000				MOV			EAX, 0
- 000002B2  58					POP			EAX						; add next digit to accumulator
- 000002B3  70 21				JO			_minValCheck
- 000002B5  83 E8 30				SUB			EAX, 48
- 000002B8  70 1C				JO			_minValCheck
- 000002BA  03 D0				ADD			EDX, EAX				; Use same sized register
- 000002BC  70 18				JO			_minValCheck			; 3 JO due to OF flag being raised at different times if the values are close to the max.
- 000002BE					_endLoop:
- 000002BE  E2 CC			LOOP		_conversionLoop
- 000002C0  EB 48			JMP			_endOfProc
+ 0000029D  BB 0000000A				MOV			EBX, 10	
+ 000002A2  50					PUSH		EAX
+ 000002A3  8B C2				MOV			EAX, EDX				; multiply accumulator by 10 for each digit
+ 000002A5  F7 EB				IMUL		EBX
+ 000002A7  8B D0				MOV			EDX, EAX				; move product back to accumulator
+ 000002A9  B8 00000000				MOV			EAX, 0
+ 000002AE  58					POP			EAX						; add next digit to accumulator
+ 000002AF  70 21				JO			_minValCheck
+ 000002B1  83 E8 30				SUB			EAX, 48
+ 000002B4  70 1C				JO			_minValCheck
+ 000002B6  03 D0				ADD			EDX, EAX				; Use same sized register
+ 000002B8  70 18				JO			_minValCheck			; 3 JO due to OF flag being raised at different times if the values are close to the max.
+ 000002BA					_endLoop:
+ 000002BA  E2 D0			LOOP		_conversionLoop
+ 000002BC  EB 7C			JMP			_endOfProc
 
 
- 000002C2				_error:
+ 000002BE				_error:
 					; Prints the error message and jumps back to the start to reprompt for valid input
 					mDisplayString	[EBP+12]
- 000002C2  52		     1		PUSH		EDX
- 000002C3  8B 55 0C	     1		MOV			EDX, [EBP+12]
- 000002C6  E8 00000000 E     1		CALL		WriteString
- 000002CB  5A		     1		POP			EDX
- 000002CC  E8 00000000 E		CALL			CrLf
- 000002D1  E9 FFFFFF70			JMP				_start
+ 000002BE  52		     1		PUSH		EDX
+ 000002BF  8B 55 0C	     1		MOV			EDX, [EBP+12]
+ 000002C2  E8 00000000 E     1		CALL		WriteString
+ 000002C7  5A		     1		POP			EDX
+ 000002C8  E8 00000000 E		CALL			CrLf
+ 000002CD  E9 FFFFFF74			JMP				_start
 
- 000002D6				_minValCheck:
+ 000002D2				_minValCheck:
 					; Check if the value is -2147483648, otherwise it is either too large or too small.
- 000002D6  81 FA 80000000		CMP			EDX, 2147483648
- 000002DC  77 E4			JA			_error
- 000002DE  8B 5D 20			MOV			EBX, [EBP+32]
- 000002E1  8B 0B			MOV			ECX, [EBX]
- 000002E3  83 F9 00			CMP			ECX, 0	
- 000002E6  74 DA			JE			_error
- 000002E8  EB 20			JMP			_endOfProc
+ 000002D2  81 FA 80000000		CMP			EDX, 2147483648
+ 000002D8  77 E4			JA			_error
+ 000002DA  8B 5D 20			MOV			EBX, [EBP+32]
+ 000002DD  8B 0B			MOV			ECX, [EBX]
+ 000002DF  83 F9 00			CMP			ECX, 0	
+ 000002E2  74 DA			JE			_error
+ 000002E4  EB 54			JMP			_endOfProc
 
- 000002EA				_minusSign:
+ 000002E6				_minusSign:
 					; adds minus sign to string
- 000002EA  53				PUSH		EBX
- 000002EB  51				PUSH		ECX
- 000002EC  8B 5D 20			MOV			EBX, [EBP+32]
- 000002EF  B9 00000001			MOV			ECX, 1
- 000002F4  89 0B			MOV			[EBX], ECX
- 000002F6  59				POP			ECX
- 000002F7  5B				POP			EBX
- 000002F8  EB C4			JMP			_endLoop	; increment forwards
+ 000002E6  53				PUSH		EBX
+ 000002E7  51				PUSH		ECX
+ 000002E8  50				PUSH		EAX	
+ 000002E9  52				PUSH		EDX
+ 000002EA  8B 45 10			MOV			EAX, [ebp+16]	
+ 000002ED  8B 10			MOV			EDX, [EAX]
+ 000002EF  83 FA 01			CMP			EDX, 1
+ 000002F2  74 40			JE			_signError
+ 000002F4  8B 5D 20			MOV			EBX, [EBP+32]
+ 000002F7  8B 0B			MOV			ECX, [EBX]
+ 000002F9  41				INC			ECX
+ 000002FA  89 0B			MOV			[EBX], ECX
+ 000002FC  5A				POP			EDX
+ 000002FD  58				POP			EAX
+ 000002FE  59				POP			ECX
+ 000002FF  5B				POP			EBX
+ 00000300  EB 20			JMP			_midString	; increment forwards
 
- 000002FA				_plusSign:
+ 00000302				_plusSign:
 					; skip the plus sign, as it is not relevant
- 000002FA  53				PUSH		EBX
- 000002FB  51				PUSH		ECX
- 000002FC  8B 5D 20			MOV			EBX, [EBP+32]
- 000002FF  B9 00000000			MOV			ECX, 0
- 00000304  89 0B			MOV			[EBX], ECX
- 00000306  59				POP			ECX
- 00000307  5B				POP			EBX
- 00000308  EB B4			JMP			_endLoop	; increment forwards
+ 00000302  53				PUSH		EBX
+ 00000303  51				PUSH		ECX
+ 00000304  50				PUSH		EAX
+ 00000305  52				PUSH		EDX
+ 00000306  8B 45 10			MOV			EAX, [ebp+16]	
+ 00000309  8B 10			MOV			EDX, [EAX]
+ 0000030B  83 FA 01			CMP			EDX, 1
+ 0000030E  74 24			JE			_signError
+ 00000310  8B 5D 20			MOV			EBX, [EBP+32]
+ 00000313  8B 0B			MOV			ECX, [EBX]
+ 00000315  B9 00000000			MOV			ECX, 0
+ 0000031A  89 0B			MOV			[EBX], ECX
+ 0000031C  5A				POP			EDX
+ 0000031D  58				POP			EAX
+ 0000031E  59				POP			ECX
+ 0000031F  5B				POP			EBX
+ 00000320  EB 00			JMP			_midString	; increment forwards
 
- 0000030A				_endOfProc:
+
+ 00000322				_midString:
+				  ; Check if the +/- sign was entered mid string.
+ 00000322  53				PUSH		EBX
+ 00000323  51				PUSH		ECX
+ 00000324  50				PUSH		EAX
+ 00000325  52				PUSH		EDX
+ 00000326  8B 45 18			MOV			EAX, [EBP+24]			; offset of userNum
+ 00000329  40				INC			EAX						; increments pointer to match ESI, since LODSB increments after moving to AL
+ 0000032A  3B C6			CMP			EAX, ESI				
+ 0000032C  75 06			JNE			_signError
+ 0000032E  5A				POP			EDX
+ 0000032F  58				POP			EAX
+ 00000330  59				POP			ECX
+ 00000331  5B				POP			EBX
+ 00000332  EB 86			JMP			_endLoop
+
+
+ 00000334				_signError:
+				  ; Error due to just -/+ being entered. Fixes registers and jumps to error.
+ 00000334  5A				POP			EDX
+ 00000335  58				POP			EAX
+ 00000336  59				POP			ECX
+ 00000337  5B				POP			EBX
+ 00000338  EB 84			JMP			_error
+
+ 0000033A				_endOfProc:
 					; IF [EBP+32] IS 1, NEG THE NUMBER.
- 0000030A  8B 5D 20			MOV			EBX, [EBP+32]
- 0000030D  8B 0B			MOV			ECX, [EBX]
- 0000030F  83 F9 00			CMP			ECX, 0
- 00000312  74 09			JE			_notNeg
- 00000314  F7 DA			NEG			EDX			; twos complement for SDWORD
- 00000316  B9 00000000			MOV			ECX, 0
- 0000031B  89 0B			MOV			[EBX], ECX
- 0000031D				_notNeg:				; avoid NEG
- 0000031D  8B 7D 08			MOV			EDI, [EBP+8]
- 00000320  8B C2			MOV			EAX, EDX
- 00000322  AB				STOSD					; Store DWORD in EDI, which points to OFFSET of currentNum
+ 0000033A  8B 5D 20			MOV			EBX, [EBP+32]
+ 0000033D  8B 0B			MOV			ECX, [EBX]
+ 0000033F  83 F9 00			CMP			ECX, 0
+ 00000342  74 12			JE			_notNeg
+ 00000344  83 F9 01			CMP			ECX, 1
+ 00000347  0F 87 FFFFFF71		JA			_error
+ 0000034D  F7 DA			NEG			EDX			; twos complement for SDWORD
+ 0000034F  B9 00000000			MOV			ECX, 0
+ 00000354  89 0B			MOV			[EBX], ECX
+ 00000356				_notNeg:				; avoid NEG
+ 00000356  8B 7D 08			MOV			EDI, [EBP+8]
+ 00000359  8B C2			MOV			EAX, EDX
+ 0000035B  AB				STOSD					; Store DWORD in EDI, which points to OFFSET of currentNum
 
- 00000323  61				POPAD
- 00000324  5D				POP			EBP
- 00000325  C2 001C			RET			28
+ 0000035C  61				POPAD
+ 0000035D  5D				POP			EBP
+ 0000035E  C2 001C			RET			28
 
- 00000328			ReadVal ENDP
+ 00000361			ReadVal ENDP
 
 
 
@@ -670,7 +717,7 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
 				;
 				; Preconditions: mDisplayString is a predefined constant.
 				;
-				; Postconditions: none.
+				; Postconditions: All registers are used, but PUSHAD/POPAD restores the stack frame.
 				;
 				; Receives:
 				; [ebp+20] = OFFSET revNumString
@@ -679,94 +726,97 @@ Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
 				; [ebp+8] = value to be converted
 				; arrayMsg, arrayError are global variables
 				;
-				; returns: eax = smallest integer
+				; returns: Uses mDisplayString to display the converted SDWORD as a string, 
 				; ---------------------------------------------------------------------------------
- 00000328			WriteVal PROC
+ 00000361			WriteVal PROC
 				; Converts an SDWORD value into a string and prints it using mDisplayString.
- 00000328  55				PUSH		EBP
- 00000329  8B EC			MOV			EBP, ESP				; Base pointer
- 0000032B  60				PUSHAD
+ 00000361  55				PUSH		EBP
+ 00000362  8B EC			MOV			EBP, ESP			; Base pointer
+ 00000364  60				PUSHAD
 
- 0000032C  8B 5D 10			MOV			EBX, [EBP+16]			; offset isNeg
- 0000032F  8B 7D 14			MOV			EDI, [EBP+20]			; Reverse numstring offset
- 00000332  B9 00000000			MOV			ECX, 0					; count for string reversal
+ 00000365  8B 5D 10			MOV			EBX, [EBP+16]		; offset isNeg
+ 00000368  8B 7D 14			MOV			EDI, [EBP+20]		; Reverse numstring offset
+ 0000036B  B9 00000000			MOV			ECX, 0				; count for string reversal
 					; CHeck if neg.
- 00000337  8B 45 08			MOV			EAX, [EBP + 8]		; Num value
- 0000033A  83 F8 00			CMP			EAX, 0
- 0000033D  7C 29			JL			_isNegative
+ 00000370  8B 45 08			MOV			EAX, [EBP + 8]		; Num value
+ 00000373  83 F8 00			CMP			EAX, 0
+ 00000376  7C 29			JL			_isNegative
 
 					;; convert back to string
- 0000033F  FC				CLD								; Move forwards through string
- 00000340  8B 45 08			MOV			EAX, [EBP + 8]		; OFFSET of Num
- 00000343  53				PUSH		EBX
- 00000344				_divideLoop:
- 00000344  BA 00000000			MOV			EDX, 0
- 00000349  BB 0000000A			MOV			EBX, 10	
- 0000034E  F7 F3			DIV			EBX
- 00000350  83 C2 30			ADD			EDX, 48				; add ascii conversion
- 00000353  50				PUSH		EAX
- 00000354  8B C2			MOV			EAX, EDX			; move remainder to store it.
- 00000356  AA				STOSB
- 00000357  58				POP			EAX
- 00000358  41				INC			ECX	
- 00000359  83 F8 00			CMP			EAX, 0
- 0000035C  75 E6			JNE			_divideLoop			; repeat until there is no quotient.
- 0000035E  5B				POP			EBX
- 0000035F  8B 03			MOV			EAX, [EBX]
- 00000361  83 F8 00			CMP			EAX, 0
- 00000364  74 1A			JE			_notNeg
- 00000366  EB 10			JMP			_reverse
+ 00000378  FC				CLD								; Move forwards through string
+ 00000379  8B 45 08			MOV			EAX, [EBP + 8]		; OFFSET of Num
+ 0000037C  53				PUSH		EBX
+ 0000037D				_divideLoop:
+ 0000037D  BA 00000000			MOV			EDX, 0
+ 00000382  BB 0000000A			MOV			EBX, 10	
+ 00000387  F7 F3			DIV			EBX
+ 00000389  83 C2 30			ADD			EDX, 48				; add ascii conversion
+ 0000038C  50				PUSH		EAX
+ 0000038D  8B C2			MOV			EAX, EDX			; move remainder to store it.
+ 0000038F  AA				STOSB
+ 00000390  58				POP			EAX
+ 00000391  41				INC			ECX	
+ 00000392  83 F8 00			CMP			EAX, 0
+ 00000395  75 E6			JNE			_divideLoop			; repeat until there is no quotient.
+ 00000397  5B				POP			EBX
+ 00000398  8B 03			MOV			EAX, [EBX]
+ 0000039A  83 F8 00			CMP			EAX, 0
+ 0000039D  74 1A			JE			_notNeg
+ 0000039F  EB 10			JMP			_reverse			; If neg, add a '-' at the end of the reverse string
 
 
 
- 00000368				_isNegative:
-					; set neg flag and go back
- 00000368  53				PUSH		EBX
- 00000369  B8 00000001			MOV			EAX, 1				; set negative flag
- 0000036E  89 03			MOV			[EBX], EAX
- 00000370  8B 45 08			MOV			EAX, [EBP+8]
- 00000373  F7 D8			NEG			EAX
- 00000375  41				INC			ECX
- 00000376  EB CC			JMP			_divideLoop
+ 000003A1				_isNegative:
+					; set neg flag and go back to loop
+ 000003A1  53				PUSH		EBX
+ 000003A2  B8 00000001			MOV			EAX, 1				; set negative flag
+ 000003A7  89 03			MOV			[EBX], EAX
+ 000003A9  8B 45 08			MOV			EAX, [EBP+8]
+ 000003AC  F7 D8			NEG			EAX
+ 000003AE  41				INC			ECX
+ 000003AF  EB CC			JMP			_divideLoop
 
 					
 
- 00000378				_reverse:
- 00000378  B8 00000000			MOV			EAX, 0
- 0000037D  B0 2D			MOV			AL, '-'
- 0000037F  AA				STOSB
- 00000380				_notNeg:
- 00000380  8B 75 14			MOV			ESI, [EBP+20]
- 00000383  8B 7D 0C			MOV			EDI, [EBP+12]
- 00000386  03 F1			ADD			ESI, ECX
- 00000388  4E				DEC			ESI
+ 000003B1				_reverse:
+				 ; add '-' at end of string
+ 000003B1  B8 00000000			MOV			EAX, 0
+ 000003B6  B0 2D			MOV			AL, '-'
+ 000003B8  AA				STOSB
+ 000003B9				_notNeg:
+				 ; set up for string reversal
+ 000003B9  8B 75 14			MOV			ESI, [EBP+20]			; offset reverse string
+ 000003BC  8B 7D 0C			MOV			EDI, [EBP+12]			; offset numstring
+ 000003BF  03 F1			ADD			ESI, ECX				; start at end of reverse string
+ 000003C1  4E				DEC			ESI						; remove null terminator
 
- 00000389				_revLoop:
- 00000389  FD					STD
- 0000038A  AC					LODSB
- 0000038B  FC					CLD
- 0000038C  AA					STOSB
- 0000038D  E2 FA			LOOP		_revLoop
+ 000003C2				_revLoop:
+					; flips the direction flag between loading and storing to reverse the string and place the forward string in [ebp+12]
+ 000003C2  FD					STD
+ 000003C3  AC					LODSB
+ 000003C4  FC					CLD
+ 000003C5  AA					STOSB
+ 000003C6  E2 FA			LOOP		_revLoop
 					
 					
- 0000038F  B0 00			MOV			AL, 0
- 00000391  AA				STOSB				; null terminator
+ 000003C8  B0 00			MOV			AL, 0
+ 000003CA  AA				STOSB						; null terminator at end of good string
 
 
-					mDisplayString [EBP+12]
- 00000392  52		     1		PUSH		EDX
- 00000393  8B 55 0C	     1		MOV			EDX, [EBP+12]
- 00000396  E8 00000000 E     1		CALL		WriteString
- 0000039B  5A		     1		POP			EDX
+					mDisplayString [EBP+12]		; display newly converted string
+ 000003CB  52		     1		PUSH		EDX
+ 000003CC  8B 55 0C	     1		MOV			EDX, [EBP+12]
+ 000003CF  E8 00000000 E     1		CALL		WriteString
+ 000003D4  5A		     1		POP			EDX
 
- 0000039C  61				POPAD
- 0000039D  5D				POP			EBP
- 0000039E  C2 0010			RET			16
- 000003A1			WriteVal ENDP
+ 000003D5  61				POPAD
+ 000003D6  5D				POP			EBP
+ 000003D7  C2 0010			RET			16
+ 000003DA			WriteVal ENDP
 
 
 				END main
-Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/11/23 14:15:49
+Microsoft (R) Macro Assembler Version 14.29.30147.0	    03/14/23 19:42:02
  Project 6     (Proj6_dalyer.asm			     Symbols 2 - 1
 
 
@@ -869,7 +919,7 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 000003B6 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 000003A1 Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000003DA Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -940,16 +990,18 @@ ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-ReadVal  . . . . . . . . . . . .	P Near	 00000241 _TEXT	Length= 000000E7 Public STDCALL
+ReadVal  . . . . . . . . . . . .	P Near	 00000241 _TEXT	Length= 00000120 Public STDCALL
   _start . . . . . . . . . . . .	L Near	 00000246 _TEXT	
   _conversionLoop  . . . . . . .	L Near	 0000028C _TEXT	
-  _endLoop . . . . . . . . . . .	L Near	 000002BE _TEXT	
-  _error . . . . . . . . . . . .	L Near	 000002C2 _TEXT	
-  _minValCheck . . . . . . . . .	L Near	 000002D6 _TEXT	
-  _minusSign . . . . . . . . . .	L Near	 000002EA _TEXT	
-  _plusSign  . . . . . . . . . .	L Near	 000002FA _TEXT	
-  _endOfProc . . . . . . . . . .	L Near	 0000030A _TEXT	
-  _notNeg  . . . . . . . . . . .	L Near	 0000031D _TEXT	
+  _endLoop . . . . . . . . . . .	L Near	 000002BA _TEXT	
+  _error . . . . . . . . . . . .	L Near	 000002BE _TEXT	
+  _minValCheck . . . . . . . . .	L Near	 000002D2 _TEXT	
+  _minusSign . . . . . . . . . .	L Near	 000002E6 _TEXT	
+  _plusSign  . . . . . . . . . .	L Near	 00000302 _TEXT	
+  _midString . . . . . . . . . .	L Near	 00000322 _TEXT	
+  _signError . . . . . . . . . .	L Near	 00000334 _TEXT	
+  _endOfProc . . . . . . . . . .	L Near	 0000033A _TEXT	
+  _notNeg  . . . . . . . . . . .	L Near	 00000356 _TEXT	
 SetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleMode . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -986,12 +1038,12 @@ WriteStackFrameName  . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-WriteVal . . . . . . . . . . . .	P Near	 00000328 _TEXT	Length= 00000079 Public STDCALL
-  _divideLoop  . . . . . . . . .	L Near	 00000344 _TEXT	
-  _isNegative  . . . . . . . . .	L Near	 00000368 _TEXT	
-  _reverse . . . . . . . . . . .	L Near	 00000378 _TEXT	
-  _notNeg  . . . . . . . . . . .	L Near	 00000380 _TEXT	
-  _revLoop . . . . . . . . . . .	L Near	 00000389 _TEXT	
+WriteVal . . . . . . . . . . . .	P Near	 00000361 _TEXT	Length= 00000079 Public STDCALL
+  _divideLoop  . . . . . . . . .	L Near	 0000037D _TEXT	
+  _isNegative  . . . . . . . . .	L Near	 000003A1 _TEXT	
+  _reverse . . . . . . . . . . .	L Near	 000003B1 _TEXT	
+  _notNeg  . . . . . . . . . . .	L Near	 000003B9 _TEXT	
+  _revLoop . . . . . . . . . . .	L Near	 000003C2 _TEXT	
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000001E0 Public STDCALL
   _ReadValLoop . . . . . . . . .	L Near	 0000003C _TEXT	

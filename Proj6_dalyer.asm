@@ -1,7 +1,7 @@
 TITLE Project 6     (Proj6_dalyer.asm)
 
 ; Author: Eric Daly
-; Last Modified: 3/7/2023
+; Last Modified: 3/12/2023
 ; OSU email address: dalyer@oregonstate.edu
 ; Course number/section:   CS271 Section 400
 ; Project Number:  6              Due Date: 3/19/2023
@@ -105,7 +105,7 @@ space				BYTE		" ",0
 count				DWORD		0
 currentTotal		BYTE		"The running subtotal of your numbers is: ",0
 extraCredit1		BYTE		"**EC: First EC, numbers the input lines using WriteVal and display a running total.",13,10,0
-userNum				byte		50 DUP(?)
+userNum				byte		50 DUP(?)		
 
 .code
 main PROC 
@@ -126,6 +126,14 @@ main PROC
 	MOV				EBX, 4
 	MOV				EAX, 0
 	_ReadValLoop:				; convert strings to integers until 10 valid are captured.
+		; current total
+		mDisplayString	OFFSET currentTotal
+		PUSH			OFFSET revString
+		PUSH			OFFSET isNeg
+		PUSH			OFFSET numString
+		PUSH			sum
+		CALL			WriteVal
+		CALL			CrlF
 		; Line numbers
 		PUSH			OFFSET revString
 		PUSH			OFFSET isNeg
@@ -134,13 +142,6 @@ main PROC
 		CALL			WriteVal
 		INC				count
 		mDisplayString	OFFSET space
-		mDisplayString	OFFSET currentTotal
-		PUSH			OFFSET revString
-		PUSH			OFFSET isNeg
-		PUSH			OFFSET numString
-		PUSH			sum
-		CALL			WriteVal
-		CALL			CrlF
 		;current total
 		PUSH			OFFSET isNeg
 		PUSH			OFFSET prompt
@@ -314,7 +315,7 @@ ReadVal PROC
 	MOV			EAX, [EBP+32]			; Make sure number is assumed positive
 	MOV			[EAX], EDX				; EDI at 0, so using it to clear Neg
 
-
+	
 	mGetString	[EBP + 28], [EBP + 24], MAXCHAR, EBX
 
 	MOV			EAX, [EBX]
@@ -331,8 +332,6 @@ ReadVal PROC
 	MOV			EAX, 0
 	_conversionLoop:
 		LODSB								; Load byte by byte into AL
-		CMP			AL, '+'
-		JE			_endLoop				; skip positive sign
 		CMP			AL, '-'
 		JE			_minusSign				; handle negative number
 		CMP			AL, '+'
@@ -380,23 +379,67 @@ ReadVal PROC
 	; adds minus sign to string
 	PUSH		EBX
 	PUSH		ECX
+	PUSH		EAX	
+	PUSH		EDX
+	MOV			EAX, [ebp+16]	
+	MOV			EDX, [EAX]
+	CMP			EDX, 1
+	JE			_signError
 	MOV			EBX, [EBP+32]
-	MOV			ECX, 1
+	MOV			ECX, [EBX]
+	INC			ECX
 	MOV			[EBX], ECX
+	POP			EDX
+	POP			EAX
 	POP			ECX
 	POP			EBX
-	JMP			_endLoop	; increment forwards
+	JMP			_midString	; increment forwards
 
 	_plusSign:
 	; skip the plus sign, as it is not relevant
 	PUSH		EBX
 	PUSH		ECX
+	PUSH		EAX
+	PUSH		EDX
+	MOV			EAX, [ebp+16]	
+	MOV			EDX, [EAX]
+	CMP			EDX, 1
+	JE			_signError
 	MOV			EBX, [EBP+32]
+	MOV			ECX, [EBX]
 	MOV			ECX, 0
 	MOV			[EBX], ECX
+	POP			EDX
+	POP			EAX
 	POP			ECX
 	POP			EBX
-	JMP			_endLoop	; increment forwards
+	JMP			_midString	; increment forwards
+
+
+	_midString:
+  ; Check if the +/- sign was entered mid string.
+	PUSH		EBX
+	PUSH		ECX
+	PUSH		EAX
+	PUSH		EDX
+	MOV			EAX, [EBP+24]			; offset of userNum
+	INC			EAX						; increments pointer to match ESI, since LODSB increments after moving to AL
+	CMP			EAX, ESI				
+	JNE			_signError
+	POP			EDX
+	POP			EAX
+	POP			ECX
+	POP			EBX
+	JMP			_endLoop
+
+
+	_signError:
+  ; Error due to just -/+ being entered. Fixes registers and jumps to error.
+	POP			EDX
+	POP			EAX
+	POP			ECX
+	POP			EBX
+	JMP			_error
 
 	_endOfProc:
 	; IF [EBP+32] IS 1, NEG THE NUMBER.
@@ -404,6 +447,8 @@ ReadVal PROC
 	MOV			ECX, [EBX]
 	CMP			ECX, 0
 	JE			_notNeg
+	CMP			ECX, 1
+	JA			_error
 	NEG			EDX			; twos complement for SDWORD
 	MOV			ECX, 0
 	MOV			[EBX], ECX
