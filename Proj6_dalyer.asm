@@ -72,7 +72,7 @@ ENDM
 ; (insert constant definitions here)
 
 
-MAXCHAR			=		21			; Max value accomodatable in mGetString
+MAXCHAR			=		50			; Max value accomodatable in mGetString
 
 .data
 
@@ -90,8 +90,8 @@ error				BYTE		"ERROR: You did not enter a signed number or your number was too 
 currentNum			SDWORD		?
 numArray			SDWORD		10 DUP(?)
 closingDisplay		BYTE		"You entered the following numbers:",13,10,0
-numString			BYTE		50 DUP (?)
-revString			BYTE		50 DUP (?)
+numString			BYTE		MAXCHAR DUP (?)
+revString			BYTE		MAXCHAR DUP (?)
 sum					SDWORD		?
 sumString			BYTE		"The sum of these numbers is: ",0
 truncatedAverage	SDWORD		?
@@ -105,7 +105,7 @@ space				BYTE		" ",0
 count				DWORD		0
 currentTotal		BYTE		"The running subtotal of your numbers is: ",0
 extraCredit1		BYTE		"**EC: First EC, numbers the input lines using WriteVal and display a running total.",13,10,0
-userNum				byte		50 DUP(?)		
+userNum				BYTE		MAXCHAR DUP(?)		
 
 .code
 main PROC 
@@ -349,11 +349,11 @@ ReadVal PROC
 		MOV			EDX, EAX				; move product back to accumulator
 		MOV			EAX, 0
 		POP			EAX						; add next digit to accumulator
-		JO			_minValCheck
+		JO			_overFlow
 		SUB			EAX, 48
-		JO			_minValCheck
+		JO			_overFlow
 		ADD			EDX, EAX				; Use same sized register
-		JO			_minValCheck			; 3 JO due to OF flag being raised at different times if the values are close to the max.
+		JO			_overFlow			; 3 JO due to OF flag being raised at different times if the values are close to the max.
 		_endLoop:
 	LOOP		_conversionLoop
 	JMP			_endOfProc
@@ -365,10 +365,15 @@ ReadVal PROC
 	CALL			CrLf
 	JMP				_start
 
+
+	_overFlow:
+  ; Overflow flag was raised in conversion loop. 
+	CMP			EDX, 2147483648
+	JE			_minValCheck
+	JMP			_error
+
 	_minValCheck:
 	; Check if the value is -2147483648, otherwise it is either too large or too small.
-	CMP			EDX, 2147483648
-	JA			_error
 	MOV			EBX, [EBP+32]
 	MOV			ECX, [EBX]
 	CMP			ECX, 0	
