@@ -1,7 +1,7 @@
 TITLE Project 6     (Proj6_dalyer.asm)
 
 ; Author: Eric Daly
-; Last Modified: 3/12/2023
+; Last Modified: 3/15/2023
 ; OSU email address: dalyer@oregonstate.edu
 ; Course number/section:   CS271 Section 400
 ; Project Number:  6              Due Date: 3/19/2023
@@ -20,6 +20,7 @@ TITLE Project 6     (Proj6_dalyer.asm)
 INCLUDE Irvine32.inc
 
 ; (insert macro definitions here)
+
 ; ---------------------------------------------------------------------------------
 ; Name: mGetString
 ;
@@ -28,8 +29,15 @@ INCLUDE Irvine32.inc
 ; Preconditions: Dont use EDX, ECX, EAX as arguments
 ;
 ; Receives: OFFSETS for prompt, userinput, and bytes read variables. Value of max length accomadatable.
+;	promptReference			= OFFSET of prompt
+;	userInputReference		= OFFSET for userInput
+;	countValue				= Value of max length accomadatable
+;	bytesReadReference		= OFFSET of bytesRead
 ;
-; ---------------------------------------------------------------------------------
+;
+; returns: Stores userInpit into userInputReference memory location.
+;			Stores number of bytes read at memory location bytesReadReference
+; -------------------------------------------------------------------------------
 mGetString			MACRO	promptReference, userInputReference, countValue, bytesReadReference
 ; Displays a prompt, and then gets the user's input and stores in in a specific memory location.
 	PUSH		ECX
@@ -59,6 +67,8 @@ ENDM
 ;
 ; Receives: OFFSET for the string to be printed.
 ;
+; returns: Prints the string located at stringReference to the console.
+;
 ; ---------------------------------------------------------------------------------
 mDisplayString		MACRO	stringReference
 	PUSH		EDX
@@ -72,7 +82,7 @@ ENDM
 ; (insert constant definitions here)
 
 
-MAXCHAR			=		50			; Max value accomodatable in mGetString
+MAXCHAR			=		17			; Max value accomodatable in mGetString
 
 .data
 
@@ -96,7 +106,7 @@ sum					SDWORD		?
 sumString			BYTE		"The sum of these numbers is: ",0
 truncatedAverage	SDWORD		?
 avgString			BYTE		"The truncated average is: ",0
-countValue			SDWORD		13		; Should it be >12 to account for -2147483648 and null terminator?
+countValue			SDWORD		13		; Should be >12 to account for -2147483648 and null terminator
 bytesRead			DWORD		0
 isNeg				DWORD		0		; assumed positive -- BOOLEAN 0 if popsitive, 1 if negative
 goodbye				BYTE		"Thanks for all the help this quarter! This class was amazing!",13,10,0
@@ -158,7 +168,7 @@ main PROC
 		MOV				sum, EAX
 		CMP				ECX, 0
 		DEC				ECX
-	JA				_ReadValLoop			; 18 bytes too large for LOOP 
+	JA				_ReadValLoop			; 18 bytes too large for LOOP :/
 	CALL			CrLf
 	CALL			CrLf
 
@@ -291,13 +301,13 @@ Introduction ENDP
 ; Postconditions: Uses PUSHAD/POPAD to restore all registers to their previous values.
 ;
 ; Receives:
-; [ebp+32] = OFFSET isNeg
-; [ebp+28] = OFFSET prompt
-; [ebp+24] = OFFSET userNum
-; [ebp+20] = countValue
-; [ebp+16] = OFFFSET bytesRead
-; [ebp+12] = OFFSET error
-; [ebp+8] = OFFSET currentNum
+; [ebp+32] = OFFSET isNeg		; boolean for negative number
+; [ebp+28] = OFFSET prompt		; prompt to be read
+; [ebp+24] = OFFSET userNum		; userNum string entered in mGetString
+; [ebp+20] = countValue			; max bytes allowed
+; [ebp+16] = OFFFSET bytesRead	; bytes read in mGetString
+; [ebp+12] = OFFSET error		; error message
+; [ebp+8] = OFFSET currentNum	; number once validated
 ; MAXCHAR is a defined constant - passed to mGetString
 ;
 ; returns: numeric value is stored in currentNum 
@@ -353,7 +363,7 @@ ReadVal PROC
 		SUB			EAX, 48
 		JO			_overFlow
 		ADD			EDX, EAX				; Use same sized register
-		JO			_overFlow			; 3 JO due to OF flag being raised at different times if the values are close to the max.
+		JO			_overFlow				; 3 JO due to OF flag being raised at different times if the values are close to the max.
 		_endLoop:
 	LOOP		_conversionLoop
 	JMP			_endOfProc
@@ -368,17 +378,14 @@ ReadVal PROC
 
 	_overFlow:
   ; Overflow flag was raised in conversion loop. 
-	CMP			EDX, 2147483648
-	JE			_minValCheck
-	JMP			_error
-
-	_minValCheck:
-	; Check if the value is -2147483648, otherwise it is either too large or too small.
+	CMP			EDX, 2147483648			; Check if the value is -2147483648, otherwise it is either too large or too small.
+	JNE			_error
 	MOV			EBX, [EBP+32]
 	MOV			ECX, [EBX]
 	CMP			ECX, 0	
 	JE			_error
 	JMP			_endOfProc
+
 
 	_minusSign:
 	; adds minus sign to string
@@ -460,7 +467,7 @@ ReadVal PROC
 	_notNeg:				; avoid NEG
 	MOV			EDI, [EBP+8]
 	MOV			EAX, EDX
-	STOSD					; Store DWORD in EDI, which points to OFFSET of currentNum
+	STOSD					; Store DWORD at EDI, which points to OFFSET of currentNum
 
 	POPAD
 	POP			EBP
@@ -480,10 +487,10 @@ ReadVal ENDP
 ; Postconditions: All registers are used, but PUSHAD/POPAD restores the stack frame.
 ;
 ; Receives:
-; [ebp+20] = OFFSET revNumString
-; [ebp+16] = OFFFSET isNeg
-; [ebp+12] = OFFSET numString
-; [ebp+8] = value to be converted
+; [ebp+20] = OFFSET revNumString			; string converted in reverse
+; [ebp+16] = OFFFSET isNeg					; negative boolean 
+; [ebp+12] = OFFSET numString				; converted from reversed string
+; [ebp+8] = value to be converted			; number passed in to get converted to string
 ; arrayMsg, arrayError are global variables
 ;
 ; returns: Uses mDisplayString to display the converted SDWORD as a string, 
